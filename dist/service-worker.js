@@ -1,10 +1,10 @@
-const VERSION = "mi-dia-v13";
+const VERSION = "mi-dia-v14";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
 const CORE = [
   "./", "./index.html", "./styles.css", "./app.js", "./db.js",
-  "./schedule.js", "./stats.js", "./report.js", "./catalog.js", "./recipes.js", "./config.js",
+  "./schedule.js", "./stats.js", "./report.js", "./catalog.js", "./recipes.js", "./config.js", "./native.js",
   "./manifest.webmanifest",
   "./icons/icon.svg", "./icons/icon-192.png", "./icons/icon-512.png",
   "./assets/compras-saludables.webp"

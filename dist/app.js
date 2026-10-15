@@ -14,6 +14,7 @@ import {
 } from "./catalog.js";
 import { RECIPES, scaleRecipe, formatQty, pantryMatch, searchRecipes, usesCarbohydrate } from "./recipes.js";
 import { chatEndpoint, isNativeApp } from "./config.js";
+import * as nativo from "./native.js";
 
 /* ------------------------------ Configuración ------------------------------ */
 
@@ -380,16 +381,29 @@ function upcomingAlerts(day, from = Date.now()) {
   return alerts;
 }
 
-/** Capa 2: el service worker mantiene temporizadores mientras siga vivo. */
+/**
+ * Capa 2: programación de los avisos futuros.
+ *
+ * En la aplicación Android las programa el sistema operativo como alarmas
+ * exactas, que suenan con la aplicación cerrada. En el navegador se delega en
+ * el service worker, que solo mantiene temporizadores mientras sigue vivo.
+ */
 async function scheduleServiceWorkerDoses() {
   if (!state.settings?.notificationsEnabled) return;
-  const registration = await navigator.serviceWorker?.getRegistration?.();
-  if (!registration?.active) return;
   const today = localDateKey();
   let day = isToday() ? state.day : await getRecord("days", today);
   if (!day) return;
   if (day !== state.day) normalizeDay(day);
-  registration.active.postMessage({ type: "schedule-doses", doses: upcomingAlerts(day) });
+  const alerts = upcomingAlerts(day);
+
+  if (nativo.isNative()) {
+    await nativo.programarAlarmas(alerts);
+    return;
+  }
+
+  const registration = await navigator.serviceWorker?.getRegistration?.();
+  if (!registration?.active) return;
+  registration.active.postMessage({ type: "schedule-doses", doses: alerts });
 
   if (registration.periodicSync) {
     try { await registration.periodicSync.register("mi-dia-reminders", { minInterval: 12 * 3600 * 1000 }); } catch { /* no disponible */ }
@@ -630,7 +644,9 @@ function todayPage() {
     <div class="card-head"><div class="card-title"><span class="icon" aria-hidden="true">💊</span><h2>Tomas del día</h2></div><span class="badge ${pending ? "warn" : ""}">${doses.length} ${doses.length === 1 ? "toma" : "tomas"}${pending ? ` · ${pending} por registrar` : ""}</span></div>
     ${stockWarnings()}
     ${doses.length ? groups.map(([label, list]) => `<p class="section-label">${label}</p><div class="dose-list">${list.map(doseHTML).join("")}</div>`).join("") : `<div class="empty">No hay medicamentos programados para este día.</div>`}
-    <div class="reminder-note">🔔 Los avisos llegan mientras Mi Día está abierta y, con la aplicación instalada, también un rato después de cerrarla. No reemplazan una alarma del teléfono: revisa esta pantalla cada día.</div>
+    <div class="reminder-note">🔔 ${nativo.isNative()
+      ? "Los avisos suenan como alarma del teléfono, aunque Mi Día esté cerrada."
+      : "Los avisos llegan mientras Mi Día está abierta y, con la aplicación instalada, también un rato después de cerrarla. No reemplazan una alarma del teléfono: revisa esta pantalla cada día."}</div>
   </section>
 
   <section class="card">
@@ -1049,7 +1065,9 @@ function settingsPage() {
     <div class="actions" style="margin-top:0"><button class="btn ${state.settings.notificationsEnabled ? "secondary" : ""}" data-enable-reminders>${state.settings.notificationsEnabled ? "Avisos activados" : "Activar avisos"}</button><button class="btn secondary" data-test-notification>Probar aviso</button></div>
     <label class="task"><input type="checkbox" data-toggle-pref="soundEnabled" ${state.settings.soundEnabled ? "checked" : ""}><span><strong>Sonido de campana</strong><small>Suena al llegar la hora de un medicamento o recordatorio.</small></span></label>
     <label class="task"><input type="checkbox" data-toggle-pref="hapticsEnabled" ${state.settings.hapticsEnabled ? "checked" : ""}><span><strong>Vibración</strong><small>Confirma cada registro con una vibración corta.</small></span></label>
-    <p class="reminder-note">Los avisos llegan mientras Mi Día está abierta y, con la aplicación instalada, durante un rato después de cerrarla. El navegador no garantiza una alarma a la hora exacta con la aplicación cerrada: para eso se necesitaría una aplicación Android.</p>
+    <p class="reminder-note">${nativo.isNative()
+      ? "Los avisos los programa el sistema como alarmas exactas, así que suenan aunque Mi Día esté cerrada. Si Android pide permiso de «alarmas y recordatorios», hay que concederlo."
+      : "Los avisos llegan mientras Mi Día está abierta y, con la aplicación instalada, durante un rato después de cerrarla. El navegador no garantiza una alarma a la hora exacta con la aplicación cerrada: para eso está la aplicación Android."}</p>
   </section>
 
   <section class="card">
@@ -1627,6 +1645,16 @@ document.addEventListener("click", async event => {
   if (d.textScale) { state.settings.textScale = Number(d.textScale); await saveSettings(); applyPreferences(); render(); return; }
   if (d.themeChoice) { state.settings.theme = d.themeChoice; await saveSettings(); applyPreferences(); render(); return; }
   if ("enableReminders" in d) {
+    if (nativo.isNative()) {
+      const { concedido, exactas } = await nativo.pedirPermisos();
+      state.settings.notificationsEnabled = concedido;
+      await saveSettings(); render();
+      showToast(concedido
+        ? (exactas ? "Avisos activados con alarma exacta" : "Avisos activados, pero el sistema puede retrasarlos")
+        : "Permiso de avisos no concedido");
+      if (concedido) { chime(); await scheduleServiceWorkerDoses(); }
+      return;
+    }
     if (!("Notification" in window)) { showToast("Este navegador no admite notificaciones"); return; }
     const permission = await Notification.requestPermission();
     state.settings.notificationsEnabled = permission === "granted";
@@ -1969,6 +1997,40 @@ async function applyLaunchAction() {
   if (action === "tomas") state.page = "today";
 }
 
+/**
+ * Aplica una acción hecha desde una notificación de Android.
+ * Reutiliza la bandeja `outbox`, igual que el service worker en la web, para
+ * que exista un solo camino de entrada y un solo lugar donde corregirlo.
+ */
+async function aplicarAccionNativa(alerta) {
+  if (!alerta?.accion || alerta.accion === "open") {
+    state.page = "today";
+    render();
+    return;
+  }
+  await putRecord("outbox", {
+    id: `${alerta.doseId}-${alerta.accion}-${Date.now()}`,
+    doseId: alerta.doseId,
+    medId: alerta.medId,
+    reminderId: alerta.reminderId,
+    date: alerta.date,
+    time: alerta.time,
+    kind: alerta.accion,
+    queuedAt: new Date().toISOString()
+  });
+  if (await drainOutbox()) render();
+  await scheduleServiceWorkerDoses();
+}
+
+/** Arranque del puente nativo. No hace nada en el navegador. */
+async function initNative() {
+  if (!nativo.isNative()) return;
+  await nativo.crearCanal();
+  await nativo.registrarAcciones(SNOOZE_MINUTES);
+  nativo.escucharAcciones(alerta => { aplicarAccionNativa(alerta).catch(console.error); });
+  if (state.settings.notificationsEnabled) await scheduleServiceWorkerDoses();
+}
+
 /** Si la app queda abierta y cambia la fecha, se pasa sola al día nuevo. */
 function watchDayRollover() {
   let knownDay = localDateKey();
@@ -2031,6 +2093,7 @@ async function init() {
   }
 
   registerWebMCP();
+  await initNative();
   render();
   showStorageState();
   reportOverdue();

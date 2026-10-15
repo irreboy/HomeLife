@@ -12,7 +12,22 @@ GitHub Actions**.
 
 ---
 
-## Paso 1 · Fijar el identificador (solo una vez, y es para siempre)
+## Las tres identidades en juego
+
+No son lo mismo y conviene no mezclarlas:
+
+| Qué | Cuál | Para qué |
+| --- | --- | --- |
+| Cuenta de GitHub | `irreboy` | Aloja el código y compila la APK |
+| Cuenta de Play Console | `irreeboy@gmail.com` | Publica y administra la app |
+| `appId` de la aplicación | `io.github.irreboy.midia` | Identifica la app para siempre |
+
+El correo de Play lleva dos `e` solo porque `irreboy@gmail.com` ya estaba
+tomado por otra persona; la cuenta de GitHub sigue siendo `irreboy`. El `appId`
+se basa en la cuenta de GitHub, que es el espacio de nombres que sí controlas,
+y es independiente del correo con el que publiques.
+
+## Paso 1 · El identificador ya está fijado
 
 En `capacitor.config.json`:
 
@@ -21,7 +36,7 @@ En `capacitor.config.json`:
 ```
 
 Google Play **no permite cambiarlo nunca** después de la primera publicación.
-Si quieres otro, cámbialo ahora.
+Si quisieras otro, este es el último momento.
 
 ## Paso 2 · Crear el proyecto Android
 
@@ -118,6 +133,27 @@ git tag v1.0.1 && git push origin v1.0.1
 ```
 
 ---
+
+## Cómo cambian los avisos en la aplicación
+
+En el navegador los avisos se entregan en tres capas y ninguna garantiza la
+hora: la página revisa cada 20 s, el service worker mantiene temporizadores
+mientras vive, y al reabrir se repasan los atrasos.
+
+En la aplicación Android los programa el sistema operativo como **alarmas
+exactas** (`allowWhileIdle`), así que suenan con la aplicación cerrada y con el
+teléfono en reposo. `dist/native.js` hace ese cambio solo: detecta el puente de
+Capacitor y, si no está, no hace nada.
+
+Lo que el usuario responde en la notificación («La tomó», «Posponer», «Omitir»)
+entra por la misma bandeja `outbox` que usa el service worker en la web, de
+modo que existe un solo camino y un solo lugar donde corregirlo. Ni el service
+worker ni la capa nativa marcan una toma por su cuenta: solo encolan, y la
+aplicación aplica.
+
+Android puede pedir aparte el permiso de **«alarmas y recordatorios»**. La
+aplicación lo solicita al activar los avisos y avisa en pantalla si quedó sin
+conceder, porque en ese caso el sistema puede retrasarlos.
 
 ## El backend del chat
 

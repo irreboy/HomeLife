@@ -125,6 +125,7 @@ La aplicación registra indicaciones; no diagnostica, interpreta resultados ni m
 | `report.js` | Gráfico SVG, informe imprimible y CSV |
 | `db.js` | IndexedDB y copia de seguridad |
 | `config.js` | Origen del Worker y detección de la app Android |
+| `native.js` | Alarmas exactas y acciones de notificación en Android |
 | `service-worker.js` | Cache offline y avisos en segundo plano |
 
 ## Aplicación Android
