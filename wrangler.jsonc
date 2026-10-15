@@ -1,5 +1,5 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
   "name": "vida-saludable-api",
   "main": "./cloudflare/worker.js",
   "compatibility_date": "2026-10-03",
