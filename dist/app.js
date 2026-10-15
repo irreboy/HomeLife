@@ -13,6 +13,7 @@ import {
   categoryOf, isInGuideline, aisleOf, unitLabel
 } from "./catalog.js";
 import { RECIPES, scaleRecipe, formatQty, pantryMatch, searchRecipes, usesCarbohydrate } from "./recipes.js";
+import { chatEndpoint, isNativeApp } from "./config.js";
 
 /* ------------------------------ Configuración ------------------------------ */
 
@@ -1755,7 +1756,9 @@ document.addEventListener("submit", async event => {
     await saveChat();
     render();
     try {
-      const response = await fetch("/api/chat", {
+      const endpoint = chatEndpoint();
+      if (!endpoint) throw new Error("La Compañera todavía no está configurada en esta versión de la aplicación.");
+      const response = await fetch(endpoint, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: state.chatMessages.filter(m => ["user", "assistant"].includes(m.role)).slice(-10) })
       });

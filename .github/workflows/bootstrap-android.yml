@@ -1,0 +1,66 @@
+# Genera la carpeta android/ una sola vez y la deja commiteada.
+#
+# Se ejecuta a mano desde la pestaña Actions. A partir de ahí el proyecto
+# nativo vive en el repositorio y se puede editar como cualquier otro código
+# (permisos del manifiesto, iconos, Health Connect), sin depender de que una
+# máquina local tenga el SDK de Android instalado.
+
+name: Crear proyecto Android (una vez)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ¿Ya existe android/?
+        id: check
+        run: |
+          if [ -d android ]; then
+            echo "La carpeta android/ ya existe. Este flujo no la sobrescribe."
+            echo "existe=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "existe=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.existe == 'false'
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        if: steps.check.outputs.existe == 'false'
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+        if: steps.check.outputs.existe == 'false'
+
+      - name: Instalar Capacitor
+        if: steps.check.outputs.existe == 'false'
+        run: npm install
+
+      - name: Generar el proyecto nativo
+        if: steps.check.outputs.existe == 'false'
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Commitear android/
+        if: steps.check.outputs.existe == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android
+          git commit -m "Genera el proyecto Android de Capacitor
+
+          Creado por el flujo bootstrap-android. A partir de aquí el proyecto
+          nativo se versiona y se edita en el repositorio."
+          git push

@@ -1,0 +1,17 @@
+{
+  "appId": "io.github.irreboy.midia",
+  "appName": "Mi Día",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon",
+      "iconColor": "#0F766E"
+    }
+  }
+}

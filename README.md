@@ -124,7 +124,16 @@ La aplicación registra indicaciones; no diagnostica, interpreta resultados ni m
 | `stats.js` | Cumplimiento, rachas y series de presión |
 | `report.js` | Gráfico SVG, informe imprimible y CSV |
 | `db.js` | IndexedDB y copia de seguridad |
+| `config.js` | Origen del Worker y detección de la app Android |
 | `service-worker.js` | Cache offline y avisos en segundo plano |
+
+## Aplicación Android
+
+La misma interfaz se empaqueta con Capacitor para obtener alarmas exactas con la
+aplicación cerrada y acceso a Health Connect. Se compila en GitHub Actions, sin
+necesidad de instalar Android Studio ni el SDK.
+
+El procedimiento completo está en [`docs/PUBLICAR-ANDROID.md`](docs/PUBLICAR-ANDROID.md).
 
 ## Actualizar la versión publicada
 
