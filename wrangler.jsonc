@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "vida-saludable-api",
+  "main": "./cloudflare/worker.js",
+  "compatibility_date": "2026-10-03",
+  "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "vars": {
+    "DEEPSEEK_MODEL": "deepseek-flash"
+  }
+}
