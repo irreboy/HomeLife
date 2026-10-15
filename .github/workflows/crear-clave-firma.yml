@@ -1,0 +1,88 @@
+# Genera la clave de firma sin necesitar Java en el computador.
+#
+# Útil cuando no se puede instalar un JDK local. La clave se produce en el
+# runner, se entrega como artefacto privado del repositorio y el runner se
+# destruye al terminar.
+#
+# Importante: con Play App Signing esta es la *clave de subida*, no la clave
+# final de la aplicación. Google custodia la definitiva. Si alguna vez se
+# compromete una clave de subida, Play permite reemplazarla; la clave de
+# aplicación, en cambio, no se puede cambiar nunca.
+
+name: Crear clave de firma
+
+on:
+  workflow_dispatch:
+    inputs:
+      alias:
+        description: "Alias de la clave"
+        default: "mi-dia"
+        required: true
+      validez_anios:
+        description: "Años de validez"
+        default: "30"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Generar contraseña y clave
+        env:
+          ALIAS: ${{ inputs.alias }}
+          ANIOS: ${{ inputs.validez_anios }}
+        run: |
+          # Contraseña aleatoria: no se elige a mano ni viaja por el chat.
+          PASS=$(openssl rand -base64 30 | tr -d '/+=' | head -c 32)
+          DIAS=$((ANIOS * 365))
+
+          keytool -genkeypair -v \
+            -keystore mi-dia.jks \
+            -alias "$ALIAS" \
+            -keyalg RSA -keysize 2048 \
+            -validity "$DIAS" \
+            -storepass "$PASS" -keypass "$PASS" \
+            -dname "CN=Mi Dia, OU=Familia, O=Mi Dia, L=Santiago, C=CL"
+
+          mkdir -p salida
+          cp mi-dia.jks salida/
+          base64 -w0 mi-dia.jks > salida/ANDROID_KEYSTORE_BASE64.txt
+          printf '%s' "$PASS"  > salida/ANDROID_KEYSTORE_PASSWORD.txt
+          printf '%s' "$PASS"  > salida/ANDROID_KEY_PASSWORD.txt
+          printf '%s' "$ALIAS" > salida/ANDROID_KEY_ALIAS.txt
+
+          cat > salida/LEEME.txt <<TXT
+          Clave de firma de Mi Día
+          ========================
+
+          Crea estos cuatro secretos en GitHub
+          (Settings > Secrets and variables > Actions > New repository secret),
+          copiando el contenido de cada archivo:
+
+            ANDROID_KEYSTORE_BASE64    <- ANDROID_KEYSTORE_BASE64.txt
+            ANDROID_KEYSTORE_PASSWORD  <- ANDROID_KEYSTORE_PASSWORD.txt
+            ANDROID_KEY_ALIAS          <- ANDROID_KEY_ALIAS.txt
+            ANDROID_KEY_PASSWORD       <- ANDROID_KEY_PASSWORD.txt
+
+          Guarda además mi-dia.jks y la contraseña en tu gestor de contraseñas.
+
+          Cuando termines, BORRA este artefacto desde la página de la ejecución:
+          mientras exista, cualquiera con acceso de lectura al repositorio puede
+          descargar la clave.
+          TXT
+
+          keytool -list -v -keystore mi-dia.jks -storepass "$PASS" | head -20
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clave-de-firma
+          path: salida/
+          retention-days: 1

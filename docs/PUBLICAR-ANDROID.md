@@ -46,36 +46,48 @@ Genera la carpeta `android/` y la deja commiteada. Solo se ejecuta una vez.
 
 ## Paso 3 · Crear la clave de firma
 
-Google Play identifica la aplicación por su firma. **Si se pierde esta clave no
-se puede volver a actualizar la app**: guárdala como guardas una contraseña
-importante.
+Google Play identifica la aplicación por su firma. Hay dos formas; el resultado
+es el mismo.
 
-Necesitas `keytool`, que viene con Java. Si no lo tienes:
+### Opción A · En GitHub, sin instalar nada
+
+Actions → «Crear clave de firma» → **Run workflow**.
+
+Genera la clave con una contraseña aleatoria y la deja como artefacto de la
+ejecución, junto con un `LEEME.txt`. Descárgalo, crea los cuatro secretos y
+**borra el artefacto**: mientras exista, cualquiera con acceso de lectura al
+repositorio puede descargarlo.
+
+### Opción B · En tu computador
+
+Necesitas `keytool`, que viene con Java:
 
 ```bash
 sudo apt install -y default-jdk-headless
-```
 
-Después:
-
-```bash
 keytool -genkey -v \
   -keystore mi-dia.jks \
   -keyalg RSA -keysize 2048 -validity 10000 \
   -alias mi-dia
 ```
 
-Te pedirá una contraseña y algunos datos. Guarda el archivo `mi-dia.jks`
-**fuera del repositorio** (está en `.gitignore`, pero mejor en tu gestor de
-contraseñas o en un respaldo cifrado).
-
-## Paso 4 · Cargar la clave en GitHub
-
-Convierte la clave a texto:
+Luego conviértela a texto para el secreto:
 
 ```bash
 base64 -w0 mi-dia.jks
 ```
+
+### En ambos casos
+
+Guarda `mi-dia.jks` y su contraseña en tu gestor de contraseñas. Está en
+`.gitignore`, pero el respaldo es cosa tuya.
+
+Con **Play App Signing** esta es la *clave de subida*: Google custodia la clave
+definitiva de la aplicación. Si la de subida se pierde o se compromete, Play
+permite reemplazarla; la definitiva no se puede cambiar nunca, y por eso la
+guarda Google.
+
+## Paso 4 · Cargar la clave en GitHub
 
 En GitHub → **Settings → Secrets and variables → Actions → New repository secret**,
 crea estos cuatro:
