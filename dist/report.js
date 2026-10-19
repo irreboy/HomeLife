@@ -212,7 +212,7 @@ export function buildReportHTML({ settings, days, notes = [], windowDays = 30, t
     con sus promedios. No contiene diagnósticos, clasificaciones ni interpretación de las cifras,
     y no reemplaza una evaluación profesional. Las horas corresponden a la hora local del teléfono.
   </div>
-  <footer>Mi Día · Vida Saludable — datos guardados únicamente en el dispositivo de la usuaria.</footer>
+  <footer>Mi Día · Vida Saludable — datos guardados únicamente en el dispositivo.</footer>
 </body></html>`;
 }
 

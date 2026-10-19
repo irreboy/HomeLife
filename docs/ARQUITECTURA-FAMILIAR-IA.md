@@ -27,7 +27,7 @@ con autorización y cada cambio queda identificado.
 
 - Alarmas garantizadas con la aplicación cerrada (requiere empaquetado Android).
 - Sincronización entre cuidadores (requiere backend y autenticación).
-- Importación desde Huawei Health.
+- Importación desde Health Connect.
 
 ## Etapa 2 — Sincronización familiar
 
@@ -97,9 +97,9 @@ que deban sonar con la PWA cerrada conviene empaquetar la interfaz con Capacitor
 una app Android pequeña que programe alarmas locales. Las alarmas son apoyo: no deben
 registrar automáticamente que una dosis fue tomada.
 
-## Huawei Watch D3
+## Relojes y Health Connect
 
 La integración requiere registrar la aplicación, obtener aprobación para los permisos
-de salud y consentimiento de la usuaria. Los registros importados deben conservar
+de salud y consentimiento explícito. Los registros importados deben conservar
 origen, hora y deduplicación. Mientras eso no exista, se mantiene el ingreso manual sin
 simular una sincronización.

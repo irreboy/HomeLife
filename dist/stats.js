@@ -1,6 +1,6 @@
 /* Métricas de cumplimiento y tendencias.
  *
- * Este módulo solamente cuenta y promedia lo que la usuaria registró.
+ * Este módulo solamente cuenta y promedia lo que se registró.
  * No clasifica la presión arterial ni interpreta cifras: esa frontera es
  * deliberada y pertenece al profesional tratante.
  */
@@ -110,7 +110,7 @@ export function bloodPressureSeries(days, windowDays = 30, today = localDateKey(
   const points = [];
   for (const day of days.filter(d => d.date >= from && d.date <= today)) {
     for (const reading of day.bloodPressure || []) {
-      points.push({ date: day.date, time: reading.time, systolic: Number(reading.systolic), diastolic: Number(reading.diastolic), pulse: Number(reading.pulse), source: reading.source || "Manual" });
+      points.push({ date: day.date, time: reading.time, systolic: Number(reading.systolic), diastolic: Number(reading.diastolic), pulse: Number(reading.pulse), source: reading.source || "Tensiómetro" });
     }
   }
   return points.sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));

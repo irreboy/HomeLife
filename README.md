@@ -106,7 +106,7 @@ sus promedios, y deja la lectura clínica al profesional tratante.
 - Compañera conectada a DeepSeek mediante un endpoint protegido del Worker; la conversación se conserva en el dispositivo y puede borrarse.
 - Aviso cuando no hay copia de seguridad reciente (más de 14 días) e indicación del espacio usado.
 - Atajos del icono instalado: agua, presión, lista de compras y nota.
-- Sección preparada para una futura vinculación autorizada con Huawei Health y Huawei Watch D3.
+- Sección preparada para leer pulso, pasos y sueño desde Health Connect con autorización explícita; ver [`docs/RELOJES-Y-HEALTH-CONNECT.md`](docs/RELOJES-Y-HEALTH-CONNECT.md).
 - PWA instalable y funcionamiento offline completo, recetario incluido.
 
 La aplicación registra indicaciones; no diagnostica, interpreta resultados ni modifica tratamientos.

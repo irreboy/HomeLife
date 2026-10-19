@@ -1,4 +1,4 @@
-const VERSION = "mi-dia-v14";
+const VERSION = "mi-dia-v15";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
@@ -57,7 +57,7 @@ async function staleWhileRevalidate(request, cacheName) {
 /*
  * Código de la aplicación (JS, CSS, manifiesto): red primero.
  * Los archivos no llevan hash en el nombre, así que servirlos desde cache dejaría
- * a la usuaria ejecutando la versión anterior tras cada publicación, e incluso
+ * ejecutando la versión anterior tras cada publicación, e incluso
  * mezclando un index.html nuevo con un app.js viejo. Con red primero siempre se
  * usa la versión publicada cuando hay conexión, y el cache cubre el modo offline.
  */

@@ -20,7 +20,7 @@ import * as nativo from "./native.js";
 
 const DEFAULT_SETTINGS = {
   id: "main",
-  personName: "Mamá",
+  personName: "",
   waterGoal: 2500,
   shoppingList: {},
   pantry: {},
@@ -44,7 +44,7 @@ const DEFAULT_SETTINGS = {
   medications: []
 };
 
-/** Recordatorios que no son medicamentos; la usuaria puede editarlos o quitarlos. */
+/** Recordatorios que no son medicamentos; se pueden editar o quitar. */
 const SUGGESTED_REMINDERS = [
   { title: "Medir la presión", icon: "♡", time: "08:45", repeat: "daily" },
   { title: "Caminar 30 minutos", icon: "👟", time: "17:00", repeat: "daily" },
@@ -942,7 +942,7 @@ function healthPage() {
   ${last ? `<section class="vitals-ticket">
     <div><span>Última presión</span><strong>${last.systolic}<small> / ${last.diastolic}</small></strong><em>mmHg</em></div>
     <div><span>Pulso</span><strong>${last.pulse}</strong><em>bpm</em></div>
-    <time>${escapeHTML(last.time)}<br>${escapeHTML(last.source || "Manual")}</time>
+    <time>${escapeHTML(last.time)}<br>${escapeHTML(last.source || "Tensiómetro")}</time>
   </section>` : ""}
 
   ${windowPicker()}
@@ -963,7 +963,7 @@ function healthPage() {
 
   <section class="card">
     <div class="card-head"><div class="card-title"><span class="icon" aria-hidden="true">♡</span><h2>Mediciones del ${isToday() ? "día" : escapeHTML(formatDate(state.viewDate, { day: "numeric", month: "long" }))}</h2></div><button class="btn soft small" data-open-bp>Agregar</button></div>
-    ${readings.length ? `<div class="bp-readings">${readings.map(r => `<div class="reading"><time>${escapeHTML(r.time)}</time><div><strong>${r.systolic} / ${r.diastolic}</strong><br><span>${r.pulse} bpm · ${escapeHTML(r.source || "Manual")}</span></div><button class="icon-button" data-delete-bp="${escapeHTML(r.id)}" aria-label="Eliminar medición">×</button></div>`).join("")}</div>` : `<div class="empty">Todavía no hay mediciones en este día.</div>`}
+    ${readings.length ? `<div class="bp-readings">${readings.map(r => `<div class="reading"><time>${escapeHTML(r.time)}</time><div><strong>${r.systolic} / ${r.diastolic}</strong><br><span>${r.pulse} bpm · ${escapeHTML(r.source || "Tensiómetro")}</span></div><button class="icon-button" data-delete-bp="${escapeHTML(r.id)}" aria-label="Eliminar medición">×</button></div>`).join("")}</div>` : `<div class="empty">Todavía no hay mediciones en este día.</div>`}
   </section>
 
   <section class="card report-card">
@@ -1003,8 +1003,8 @@ function healthPage() {
   </section>
 
   <section class="device-card span-2">
-    <div class="watch-face"><span aria-hidden="true">♡</span><b>D3</b></div>
-    <div class="device-copy"><span class="connection-status">○ Pendiente de vincular</span><h2>Huawei Watch D3</h2><p>Cuando llegue el reloj, conectaremos las lecturas autorizadas de presión y pulso desde Huawei Health.</p><button class="btn secondary small" data-device-info>Ver plan de conexión</button></div>
+    <div class="watch-face"><span aria-hidden="true">⌚</span><b>sync</b></div>
+    <div class="device-copy"><span class="connection-status">○ Pendiente de vincular</span><h2>Reloj o pulsera</h2><p>La aplicación Android podrá leer pulso, pasos y sueño desde Health Connect, con autorización explícita. La presión arterial seguirá siendo manual salvo que el reloj tenga brazalete.</p><button class="btn secondary small" data-device-info>Ver cómo funciona</button></div>
   </section>
   </div>
 
@@ -1127,17 +1127,18 @@ function modalHTML() {
     <div class="select-row"><label class="field"><span class="field-label">Sistólica</span><input name="systolic" type="number" inputmode="numeric" min="50" max="300" required placeholder="128"></label><label class="field"><span class="field-label">Diastólica</span><input name="diastolic" type="number" inputmode="numeric" min="30" max="200" required placeholder="79"></label></div>
     <div class="select-row"><label class="field"><span class="field-label">Pulso</span><input name="pulse" type="number" inputmode="numeric" min="20" max="250" required placeholder="67"></label><label class="field"><span class="field-label">Hora</span><input name="time" type="time" required value="${formatTime()}"></label></div>
     <label class="field"><span class="field-label">Día</span><input name="date" type="date" required value="${state.viewDate}" max="${localDateKey()}"></label>
-    <label class="field"><span class="field-label">Origen</span><select name="source"><option>Manual</option><option>Huawei Watch D3</option><option>Otro tensiómetro</option></select></label>
+    <label class="field"><span class="field-label">Origen</span><select name="source"><option>Tensiómetro</option><option>Control médico</option><option>Reloj con brazalete</option><option>Otro</option></select></label>
     <div class="actions"><button class="btn" type="submit">Guardar medición</button><button class="btn secondary" type="button" data-close-modal>Cancelar</button></div></form></div>`;
 
-  if (type === "device") return `<div class="modal-backdrop" data-close-modal><section class="modal"><div class="modal-head"><div><p class="eyebrow">Conexión futura</p><h2>Huawei Health + Mi Día</h2></div>${close}</div>
+  if (type === "device") return `<div class="modal-backdrop" data-close-modal><section class="modal"><div class="modal-head"><div><p class="eyebrow">Conexión futura</p><h2>Reloj y Health Connect</h2></div>${close}</div>
     <div class="connection-steps">
-      <div><b>1</b><span><strong>Reloj sincronizado</strong><small>El D3 envía sus mediciones a Huawei Health.</small></span></div>
-      <div><b>2</b><span><strong>Permiso de Huawei</strong><small>Registraremos la aplicación y solicitaremos acceso de solo lectura para presión y pulso.</small></span></div>
-      <div><b>3</b><span><strong>Autorización de ella</strong><small>Tu mamá inicia sesión con su Huawei ID y decide qué datos compartir.</small></span></div>
-      <div><b>4</b><span><strong>Importación segura</strong><small>Mi Día incorpora hora, presión y pulso sin interpretar los valores.</small></span></div>
+      <div><b>1</b><span><strong>El reloj sincroniza</strong><small>La aplicación del fabricante (Mi Fitness, Zepp, Huawei Health) envía las mediciones al teléfono.</small></span></div>
+      <div><b>2</b><span><strong>Health Connect en medio</strong><small>Esa aplicación comparte los datos con Health Connect, el almacén de salud de Android.</small></span></div>
+      <div><b>3</b><span><strong>Autorización explícita</strong><small>Quien use la aplicación elige qué permite leer, y puede revocarlo cuando quiera.</small></span></div>
+      <div><b>4</b><span><strong>Lectura, no interpretación</strong><small>Mi Día incorpora hora y valores tal como vienen, sin clasificarlos.</small></span></div>
     </div>
-    <div class="notice">No activaremos una conexión falsa. Este botón cambiará a «Vincular reloj» cuando tengamos la aplicación Huawei registrada y aprobada.</div>
+    <div class="notice">La presión arterial es aparte: la mayoría de los relojes <strong>no la mide</strong>, solo estima el pulso. Para tenerla automática hace falta un reloj con brazalete inflable. Mientras tanto se ingresa a mano desde el tensiómetro.</div>
+    <div class="notice">Esto requiere la aplicación Android: Health Connect no existe para la versión web.</div>
     <div class="actions"><button type="button" class="btn secondary" data-close-modal>Entendido</button></div></section></div>`;
 
   if (type === "liquid") return `<div class="modal-backdrop" data-close-modal><form class="modal" id="liquid-form"><div class="modal-head"><div><p class="eyebrow">Hidratación</p><h2>Registrar otro líquido</h2></div>${close}</div>
@@ -1267,7 +1268,7 @@ function modalHTML() {
 
 /**
  * Primer uso. La aplicación llega vacía a propósito: la pauta la carga la
- * familia aquí o restaurando una copia de seguridad.
+ * familia al instalarla, o restaurando una copia de seguridad.
  */
 function onboardingPage() {
   return `<div class="app-shell onboarding">
@@ -1277,7 +1278,7 @@ function onboardingPage() {
       <p class="welcome-lead">Una agenda privada de medicamentos, alimentación, hidratación y presión. Todo queda guardado solo en este teléfono.</p>
 
       <form id="onboarding-form" class="welcome-card">
-        <label class="field"><span class="field-label">¿Para quién es esta agenda?</span><input name="personName" required value="Mamá" autocomplete="off"></label>
+        <label class="field"><span class="field-label">¿Para quién es esta agenda?</span><input name="personName" required placeholder="Ej.: Mamá, Papá o tu nombre" autocomplete="off"></label>
         <label class="field"><span class="field-label">Meta diaria de agua</span><select name="waterGoal">${[2000, 2250, 2500, 2750, 3000].map(v => `<option value="${v}" ${v === 2500 ? "selected" : ""}>${v.toLocaleString("es-CL")} ml</option>`).join("")}</select></label>
         <button class="btn block" type="submit">Comenzar</button>
       </form>
@@ -1634,7 +1635,7 @@ document.addEventListener("click", async event => {
 
   /* --- Ajustes --- */
   if ("saveGeneral" in d) {
-    state.settings.personName = document.querySelector("#person-name").value.trim() || "Mamá";
+    state.settings.personName = document.querySelector("#person-name").value.trim() || "Mi agenda";
     state.settings.waterGoal = Number(document.querySelector("#water-goal").value);
     state.settings.defaultServings = Math.min(12, Math.max(1, Number(document.querySelector("#default-servings").value) || 4));
     await saveSettings();
@@ -1795,7 +1796,7 @@ document.addEventListener("submit", async event => {
       state.chatMessages.push({ role: "assistant", content: result.reply });
     } catch (error) {
       // Un TypeError de fetch significa que no se pudo contactar al servidor:
-      // nunca se muestra el mensaje técnico del navegador a la usuaria.
+      // nunca se muestra el mensaje técnico del navegador a quien la usa.
       const unreachable = error instanceof TypeError || navigator.onLine === false;
       state.chatMessages.push({
         role: "assistant",
@@ -1814,7 +1815,7 @@ document.addEventListener("submit", async event => {
   if (formId === "onboarding-form") {
     event.preventDefault();
     const f = new FormData(form);
-    state.settings.personName = String(f.get("personName")).trim() || "Mamá";
+    state.settings.personName = String(f.get("personName")).trim() || "Mi agenda";
     state.settings.waterGoal = Number(f.get("waterGoal")) || 2500;
     state.settings.onboardedAt = new Date().toISOString();
     await saveSettings();
@@ -2143,7 +2144,7 @@ function registerWebMCP() {
     inputSchema: { type: "object", properties: { systolic: { type: "number", minimum: 50, maximum: 300 }, diastolic: { type: "number", minimum: 30, maximum: 200 }, pulse: { type: "number", minimum: 20, maximum: 250 }, time: { type: "string" }, source: { type: "string" } }, required: ["systolic", "diastolic", "pulse", "time"], additionalProperties: false },
     annotations: { readOnlyHint: false, untrustedContentHint: false },
     execute: async input => {
-      const reading = { id: uid(), source: input.source || "Manual", ...input };
+      const reading = { id: uid(), source: input.source || "Tensiómetro", ...input };
       state.day.bloodPressure.push(reading);
       state.day.bloodPressure.sort((a, b) => a.time.localeCompare(b.time));
       await saveDay(); render();

@@ -118,9 +118,9 @@ Deja dos archivos en los artefactos de la ejecución:
    por vida**, con apps ilimitadas. Piden cédula para verificar identidad.
 2. **Crear app** → nombre «Mi Día», español, gratuita.
 3. Subir el `.aab` a **Prueba interna**.
-4. Agregar el correo de tu mamá como probadora y enviarle el enlace de
-   invitación. Desde ahí instala como cualquier otra aplicación y recibe
-   actualizaciones solas.
+4. Agregar como probadores los correos de quienes vayan a usarla y enviarles
+   el enlace de invitación. Desde ahí instalan como cualquier otra aplicación
+   y reciben actualizaciones solas.
 
 La **prueba interna no pasa por la regla de 12 probadores durante 14 días**;
 esa regla aplica solo si algún día quieres la ficha pública en producción.
@@ -128,7 +128,7 @@ esa regla aplica solo si algún día quieres la ficha pública en producción.
 Hay que completar igualmente el contenido obligatorio: política de privacidad,
 clasificación de contenido y el formulario de seguridad de datos. Como la
 aplicación no envía datos de salud a ningún servidor, ese formulario es corto y
-honesto: lo único que sale del teléfono son los mensajes que la usuaria escribe
+honesto: lo único que sale del teléfono son los mensajes que se escriben
 en la pestaña Compañera.
 
 ## Paso 7 · Actualizar
